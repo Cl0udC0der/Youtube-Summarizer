@@ -14,12 +14,12 @@ The user shares a YouTube URL and asks for a summary, key points, TL;DR, or "wha
 ## How to invoke
 
 ```
-youtube-summarizer <url> [--lang <code>] [--refresh]
+youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>]
 ```
 
 - `<url>` — a full YouTube URL or a bare 11-character video ID
 - `--lang <code>` — prefer a specific caption language (defaults to the video's original language, manually-created captions preferred over auto-generated)
-- `--refresh` — bypass the cache in `.cache/` and re-fetch
+- `--on-duplicate` — what to do if this video's already been fetched before (checked against `history/`, not `.cache/`): `read` (default) returns the existing transcript with no network call; `overwrite` re-fetches and replaces the latest saved entry in place; `version` re-fetches and saves it as a new entry alongside the old ones. Only matters on a repeat request — a video's first fetch always happens regardless of this flag. You generally don't need to pass this: if the user just wants a summary, the default `read` behavior is what you want, even on a second request for the same video in the same conversation.
 
 Output is JSON on stdout:
 

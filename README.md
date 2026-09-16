@@ -15,20 +15,28 @@ npm link
 ## Usage
 
 ```
-youtube-summarizer <url> [--lang <code>] [--refresh]
+youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>]
 ```
 
 Outputs JSON (title, channel, chapters, transcript, source provenance) to stdout. See `SKILL.md` for the full output contract and how an agent should consume it.
 
+Before fetching, the CLI checks `history/` for an existing entry for that video. If none exists, it always fetches and saves the first entry regardless of `--on-duplicate`. If one does exist, `--on-duplicate` controls what happens:
+
+- `read` (default) — return the existing entry as-is; no fetch, no writes.
+- `overwrite` — fetch fresh and replace the latest history entry's file and database record in place (same iteration number).
+- `version` — fetch fresh and save it as a new iteration, leaving prior entries untouched.
+
 ## History
 
-Every successful run (cache hit or fresh fetch) is archived to `history/`, one file per request:
+Every fetch that isn't a `read`-mode hit is archived to `history/`, one file per request:
 
 ```
 history/Youtube-<videoId>-<extractMethod>-v<iteration>.json
 ```
 
-`iteration` increments per video, so repeated requests for the same video never overwrite each other — unlike `.cache/`, which only keeps the latest fetch per video for fast re-reads. `history/database.json` is a single JSON array with a matching entry (same fields plus the full result) for every history file, for searching without opening each one individually.
+`history/database.json` is a single JSON array with one index entry per history file — same fields, minus the transcript text — for searching without opening each file individually. The transcript itself only lives in its own per-request file. `.cache/<videoId>.json` still mirrors the single latest fetch per video, but only `history/database.json` is consulted to decide whether a video's already been fetched.
+
+`history/` is gitignored — it's a local, potentially large personal archive, not something meant to be committed.
 
 ## Optional env vars
 
