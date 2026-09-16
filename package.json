@@ -1,0 +1,25 @@
+{
+  "name": "youtube-summarizer",
+  "version": "0.1.0",
+  "description": "Fetches a YouTube video's transcript for an LLM agent to summarize.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "youtube-summarizer": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,3 @@
+# Four-tier transcript fallback
+
+Transcript acquisition tries four sources in order — public captions, authenticated YouTube Data API for owned videos, `yt-dlp` extraction, then local Whisper transcription of downloaded audio — falling through only when the prior tier fails. This was chosen over a simpler single-source approach (e.g. captions-only, or always using `yt-dlp`) to maximize coverage: public captions are fast and free but don't exist for every video, the owner-authenticated tier reaches unlisted/private videos on the user's own channel that no public method can, and local Whisper is a last resort that trades speed for zero cost/dependency on a hosted API.
