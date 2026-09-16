@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { readCache, writeCache } from "./lib/cache.js";
+import { recordHistory } from "./lib/history.js";
 import { runPipeline } from "./lib/pipeline.js";
 import { extractVideoId } from "./lib/videoId.js";
 
@@ -19,6 +20,8 @@ program
       if (!options.refresh) {
         const cached = await readCache(videoId);
         if (cached) {
+          const filename = await recordHistory(cached);
+          console.error(`Saved to history/${filename}`);
           process.stdout.write(JSON.stringify(cached, null, 2) + "\n");
           return;
         }
@@ -26,6 +29,8 @@ program
 
       const result = await runPipeline(videoId, options.lang);
       await writeCache(result);
+      const filename = await recordHistory(result);
+      console.error(`Saved to history/${filename}`);
       process.stdout.write(JSON.stringify(result, null, 2) + "\n");
     } catch (err) {
       console.error(err instanceof Error ? err.message : String(err));

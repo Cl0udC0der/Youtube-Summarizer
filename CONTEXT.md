@@ -19,3 +19,6 @@ Not produced by this codebase. The output an external LLM agent generates after 
 
 **Caption track**:
 One of possibly several language/quality variants YouTube exposes for a video (manual vs. auto-generated, multiple languages). This tool prefers a manually-created track in the video's original language by default; `--lang` selects a specific track.
+
+**History entry**:
+A durable, versioned record of a single transcript fetch, written to `history/` on every successful run and never overwritten — repeated fetches of the same video get incrementing iterations instead. Distinct from the Transcript cache in `.cache/`, which holds only the most recent fetch per video and exists purely to skip redundant re-fetching, not as a record.

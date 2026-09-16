@@ -20,6 +20,16 @@ youtube-summarizer <url> [--lang <code>] [--refresh]
 
 Outputs JSON (title, channel, chapters, transcript, source provenance) to stdout. See `SKILL.md` for the full output contract and how an agent should consume it.
 
+## History
+
+Every successful run (cache hit or fresh fetch) is archived to `history/`, one file per request:
+
+```
+history/Youtube-<videoId>-<extractMethod>-v<iteration>.json
+```
+
+`iteration` increments per video, so repeated requests for the same video never overwrite each other — unlike `.cache/`, which only keeps the latest fetch per video for fast re-reads. `history/database.json` is a single JSON array with a matching entry (same fields plus the full result) for every history file, for searching without opening each one individually.
+
 ## Optional env vars
 
 - `YOUTUBE_OAUTH_TOKEN` — enables the owned-channel tier (unlisted/private videos on your own channel). You manage obtaining/refreshing this token yourself; the tool only reads it.
