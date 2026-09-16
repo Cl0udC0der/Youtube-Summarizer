@@ -11,9 +11,9 @@ interface Tier {
 }
 
 const TIERS: Tier[] = [
-  { source: "public-captions", run: fetchPublicCaptions },
   { source: "owned-api", run: fetchOwnedCaptions },
   { source: "extractor", run: fetchViaExtractor },
+  { source: "public-captions", run: fetchPublicCaptions },
   { source: "audio-transcription", run: (videoId) => fetchViaAudioTranscription(videoId) },
 ];
 
@@ -39,6 +39,6 @@ export async function runPipeline(videoId: string, lang?: string): Promise<Trans
   }
 
   throw new Error(
-    `Could not obtain a transcript for ${videoId} — all tiers failed (public captions, owned-channel API, yt-dlp extractor, audio transcription).`
+    `Could not obtain a transcript for ${videoId} — all tiers failed (owned-channel API, yt-dlp extractor, public captions, audio transcription).`
   );
 }
