@@ -26,7 +26,7 @@ Output is a slimmed JSON summary on stdout — **not the transcript itself**:
 ```json
 {
   "savedTo": "history/Youtube-<videoId>-<method>-v<n>.json",
-  "processTimeMs": 0,
+  "processTimeMs": "0ms (00:00:00)",
   "videoId": "...",
   "url": "...",
   "title": "...",
