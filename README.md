@@ -18,7 +18,9 @@ npm link
 youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>] [--tier <name>]
 ```
 
-Outputs JSON (title, channel, chapters, transcript, source provenance) to stdout. See `SKILL.md` for the full output contract and how an agent should consume it.
+While a fresh fetch is running, a progress spinner with a live elapsed-time counter shows on stderr (only when stderr is an interactive terminal — it stays silent when piped, e.g. when this CLI is invoked as a subprocess by an agent).
+
+Outputs a slimmed JSON summary to stdout — `savedTo` (the history file path), `processTimeMs`, title/channel/duration/language/source/fetchedAt, and `chapterCount` (a number, not the chapter list). The full record, including the real chapter list and the transcript text, is never printed to the terminal — it only lives in the file at `savedTo`. This is the same shape whether the video was just fetched or already existed in history. See `SKILL.md` for the full output contract and how an agent should consume it.
 
 Before fetching, the CLI checks `history/` for an existing entry for that video. If none exists, it always fetches and saves the first entry regardless of `--on-duplicate`. If one does exist, `--on-duplicate` controls what happens:
 
