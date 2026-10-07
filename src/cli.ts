@@ -33,6 +33,15 @@ interface Summarizable {
   fetchedAt: string;
 }
 
+function formatProcessTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const hours = pad(Math.floor(totalSeconds / 3600));
+  const minutes = pad(Math.floor((totalSeconds % 3600) / 60));
+  const seconds = pad(totalSeconds % 60);
+  return `${ms}ms (${hours}:${minutes}:${seconds})`;
+}
+
 /**
  * The full record (chapters, transcript) already lives in history/<file> —
  * this is what actually reaches the terminal/stdout, so it stays slim:
@@ -42,7 +51,7 @@ interface Summarizable {
 function toSummary(entry: Summarizable, savedTo: string, processTimeMs: number) {
   return {
     savedTo,
-    processTimeMs,
+    processTimeMs: formatProcessTime(processTimeMs),
     videoId: entry.videoId,
     url: entry.url,
     title: entry.title,
