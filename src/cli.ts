@@ -8,9 +8,16 @@ import {
   recordHistory,
 } from "./lib/history.js";
 import { runPipeline } from "./lib/pipeline.js";
+import type { TranscriptSource } from "./lib/types.js";
 import { extractVideoId } from "./lib/videoId.js";
 
 type OnDuplicateMode = "read" | "overwrite" | "version";
+const TRANSCRIPT_SOURCES: TranscriptSource[] = [
+  "owned-api",
+  "extractor",
+  "public-captions",
+  "audio-transcription",
+];
 
 const program = new Command();
 
@@ -27,31 +34,47 @@ program
       .choices(["read", "overwrite", "version"])
       .default("read")
   )
-  .action(async (url: string, options: { lang?: string; onDuplicate: OnDuplicateMode }) => {
-    try {
-      const videoId = extractVideoId(url);
-      const existing = await findLatestHistoryEntry(videoId);
+  .addOption(
+    new Option(
+      "--tier <name>",
+      "skip straight to this transcript tier instead of starting from owned-api; later tiers still run as fallback if it fails"
+    ).choices(TRANSCRIPT_SOURCES)
+  )
+  .action(
+    async (
+      url: string,
+      options: { lang?: string; onDuplicate: OnDuplicateMode; tier?: TranscriptSource }
+    ) => {
+      try {
+        const videoId = extractVideoId(url);
+        const existing = await findLatestHistoryEntry(videoId);
 
-      if (existing && options.onDuplicate === "read") {
-        const full = await readHistoryFile(existing.filename);
-        process.stdout.write(JSON.stringify(full, null, 2) + "\n");
-        return;
+        if (existing && options.onDuplicate === "read") {
+          if (options.tier) {
+            console.error(
+              `History entry already exists for ${videoId} — returning cached entry as-is (--tier ignored; use --on-duplicate overwrite or version to force a fresh fetch).`
+            );
+          }
+          const full = await readHistoryFile(existing.filename);
+          process.stdout.write(JSON.stringify(full, null, 2) + "\n");
+          return;
+        }
+
+        const result = await runPipeline(videoId, options.lang, options.tier);
+        await writeCache(result);
+
+        const filename =
+          existing && options.onDuplicate === "overwrite"
+            ? await overwriteLatestHistory(existing, result)
+            : await recordHistory(result);
+        console.error(`Saved to history/${filename}`);
+
+        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : String(err));
+        process.exitCode = 1;
       }
-
-      const result = await runPipeline(videoId, options.lang);
-      await writeCache(result);
-
-      const filename =
-        existing && options.onDuplicate === "overwrite"
-          ? await overwriteLatestHistory(existing, result)
-          : await recordHistory(result);
-      console.error(`Saved to history/${filename}`);
-
-      process.stdout.write(JSON.stringify(result, null, 2) + "\n");
-    } catch (err) {
-      console.error(err instanceof Error ? err.message : String(err));
-      process.exitCode = 1;
     }
-  });
+  );
 
 program.parse();

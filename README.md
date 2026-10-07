@@ -15,7 +15,7 @@ npm link
 ## Usage
 
 ```
-youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>]
+youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>] [--tier <name>]
 ```
 
 Outputs JSON (title, channel, chapters, transcript, source provenance) to stdout. See `SKILL.md` for the full output contract and how an agent should consume it.
@@ -25,6 +25,12 @@ Before fetching, the CLI checks `history/` for an existing entry for that video.
 - `read` (default) — return the existing entry as-is; no fetch, no writes.
 - `overwrite` — fetch fresh and replace the latest history entry's file and database record in place (same iteration number).
 - `version` — fetch fresh and save it as a new iteration, leaving prior entries untouched.
+
+### `--tier`
+
+Skips straight to a named tier (`owned-api`, `extractor`, `public-captions`, `audio-transcription`) instead of always starting from `owned-api`. Earlier tiers are skipped entirely; later tiers still run as a fallback if the requested one fails, so every tier is attempted at most once. Useful for testing a single tier in isolation, or for a video you already know has no captions anywhere — jump straight to `audio-transcription` instead of waiting on three tiers that are guaranteed to fail first.
+
+Note the interaction with `--on-duplicate`: under the default `read` mode, an existing history entry is returned before the pipeline (and therefore `--tier`) ever runs — the CLI prints a stderr notice when this happens so it isn't a silent no-op. Use `--on-duplicate overwrite` or `version` to force a fresh fetch that actually honors `--tier`.
 
 ## History
 

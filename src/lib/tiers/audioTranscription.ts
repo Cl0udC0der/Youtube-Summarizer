@@ -3,6 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { ConfigurationError } from "../errors.js";
 import type { TierResult } from "./publicCaptions.js";
 
 const execFileAsync = promisify(execFile);
@@ -18,7 +19,7 @@ export async function fetchViaAudioTranscription(videoId: string): Promise<TierR
   const whisperBin = process.env.WHISPER_BIN ?? "whisper-cli";
   const whisperModel = process.env.WHISPER_MODEL;
   if (!whisperModel) {
-    throw new Error(
+    throw new ConfigurationError(
       "WHISPER_MODEL is not set — point it at a whisper.cpp .bin model file to enable audio transcription."
     );
   }
