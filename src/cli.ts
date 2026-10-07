@@ -4,11 +4,11 @@ import { writeCache } from "./lib/cache.js";
 import {
   findLatestHistoryEntry,
   overwriteLatestHistory,
-  readHistoryFile,
   recordHistory,
 } from "./lib/history.js";
 import { runPipeline } from "./lib/pipeline.js";
-import type { TranscriptSource } from "./lib/types.js";
+import { startSpinner } from "./lib/spinner.js";
+import type { Chapter, TranscriptSource } from "./lib/types.js";
 import { extractVideoId } from "./lib/videoId.js";
 
 type OnDuplicateMode = "read" | "overwrite" | "version";
@@ -18,6 +18,42 @@ const TRANSCRIPT_SOURCES: TranscriptSource[] = [
   "public-captions",
   "audio-transcription",
 ];
+
+/** The fields a slimmed CLI summary is built from — satisfied structurally
+ * by both a fresh TranscriptResult and a cached HistoryIndexEntry. */
+interface Summarizable {
+  videoId: string;
+  url: string;
+  title: string;
+  channel: string;
+  durationSeconds: number;
+  chapters: Chapter[];
+  language: string;
+  source: TranscriptSource;
+  fetchedAt: string;
+}
+
+/**
+ * The full record (chapters, transcript) already lives in history/<file> —
+ * this is what actually reaches the terminal/stdout, so it stays slim:
+ * chapters become a count, transcript is omitted. A consumer that needs the
+ * full transcript reads it from savedTo.
+ */
+function toSummary(entry: Summarizable, savedTo: string, processTimeMs: number) {
+  return {
+    savedTo,
+    processTimeMs,
+    videoId: entry.videoId,
+    url: entry.url,
+    title: entry.title,
+    channel: entry.channel,
+    durationSeconds: entry.durationSeconds,
+    chapterCount: entry.chapters.length,
+    language: entry.language,
+    source: entry.source,
+    fetchedAt: entry.fetchedAt,
+  };
+}
 
 const program = new Command();
 
@@ -45,6 +81,7 @@ program
       url: string,
       options: { lang?: string; onDuplicate: OnDuplicateMode; tier?: TranscriptSource }
     ) => {
+      const startedAt = Date.now();
       try {
         const videoId = extractVideoId(url);
         const existing = await findLatestHistoryEntry(videoId);
@@ -55,21 +92,31 @@ program
               `History entry already exists for ${videoId} — returning cached entry as-is (--tier ignored; use --on-duplicate overwrite or version to force a fresh fetch).`
             );
           }
-          const full = await readHistoryFile(existing.filename);
-          process.stdout.write(JSON.stringify(full, null, 2) + "\n");
+          const summary = toSummary(
+            existing,
+            `history/${existing.filename}`,
+            Date.now() - startedAt
+          );
+          process.stdout.write(JSON.stringify(summary, null, 2) + "\n");
           return;
         }
 
-        const result = await runPipeline(videoId, options.lang, options.tier);
+        const spinner = startSpinner("Fetching transcript", startedAt);
+        let result;
+        try {
+          result = await runPipeline(videoId, options.lang, options.tier);
+        } finally {
+          spinner.stop();
+        }
         await writeCache(result);
 
         const filename =
           existing && options.onDuplicate === "overwrite"
             ? await overwriteLatestHistory(existing, result)
             : await recordHistory(result);
-        console.error(`Saved to history/${filename}`);
 
-        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+        const summary = toSummary(result, `history/${filename}`, Date.now() - startedAt);
+        process.stdout.write(JSON.stringify(summary, null, 2) + "\n");
       } catch (err) {
         console.error(err instanceof Error ? err.message : String(err));
         process.exitCode = 1;
