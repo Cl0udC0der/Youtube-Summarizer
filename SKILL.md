@@ -14,7 +14,7 @@ The user shares a YouTube URL and asks for a summary, key points, TL;DR, or "wha
 ## How to invoke
 
 ```
-youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>]
+yts <url> [--lang <code>] [--on-duplicate <read|overwrite|version>]
 ```
 
 - `<url>` — a full YouTube URL or a bare 11-character video ID

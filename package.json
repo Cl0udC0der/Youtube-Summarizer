@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "bin": {
+    "yts": "./dist/cli.js",
     "youtube-summarizer": "./dist/cli.js"
   },
   "scripts": {
