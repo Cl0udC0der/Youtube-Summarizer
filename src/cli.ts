@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import { Command, Option } from "commander";
 import { writeCache } from "./lib/cache.js";
 import {
@@ -64,11 +65,17 @@ function toSummary(entry: Summarizable, savedTo: string, processTimeMs: number) 
   };
 }
 
+// Resolves to the repo root from both src/ (tsx) and dist/ (built).
+const { version } = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8")
+) as { version: string };
+
 const program = new Command();
 
 program
-  .name("youtube-summarizer")
+  .name("yts")
   .description("Fetch a YouTube video's transcript for an LLM agent to summarize.")
+  .version(version)
   .argument("<url>", "YouTube video URL or video ID")
   .option("--lang <code>", "preferred caption language (e.g. en, es)")
   .addOption(

@@ -10,12 +10,12 @@ npm run build
 npm link
 ```
 
-`npm link` gives you a global `youtube-summarizer` command backed by this repo (see `docs/adr/` for why, not a registry publish).
+`npm link` gives you a global `yts` command (with `youtube-summarizer` kept as a longer alias) backed by this repo (see `docs/adr/` for why, not a registry publish).
 
 ## Usage
 
 ```
-youtube-summarizer <url> [--lang <code>] [--on-duplicate <read|overwrite|version>] [--tier <name>]
+yts <url> [--lang <code>] [--on-duplicate <read|overwrite|version>] [--tier <name>]
 ```
 
 While a fresh fetch is running, a progress spinner with a live elapsed-time counter shows on stderr (only when stderr is an interactive terminal — it stays silent when piped, e.g. when this CLI is invoked as a subprocess by an agent).
